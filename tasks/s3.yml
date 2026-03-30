@@ -1,9 +1,44 @@
 ---
+- name: Check if AWS CLI is installed
+  ansible.builtin.command:
+    cmd: aws --version
+  register: aws_cli_check
+  changed_when: false
+  failed_when: false
+
 - name: Install AWS CLI
-  ansible.builtin.apt:
-    name: awscli
-    state: present
-    update_cache: true
+  when: aws_cli_check.rc != 0
+  block:
+    - name: Install unzip
+      ansible.builtin.apt:
+        name: unzip
+        state: present
+        update_cache: true
+
+    - name: Download AWS CLI installer
+      ansible.builtin.get_url:
+        url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+        dest: /tmp/awscliv2.zip
+        mode: "0644"
+
+    - name: Extract AWS CLI installer
+      ansible.builtin.unarchive:
+        src: /tmp/awscliv2.zip
+        dest: /tmp
+        remote_src: true
+
+    - name: Run AWS CLI installer
+      ansible.builtin.command:
+        cmd: /tmp/aws/install
+        creates: /usr/local/bin/aws
+
+    - name: Clean up installer
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/awscliv2.zip
+        - /tmp/aws
 
 - name: Sync ledger data from S3
   ansible.builtin.command:
