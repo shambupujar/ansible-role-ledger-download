@@ -1,0 +1,15 @@
+---
+- name: Download ledger via S3
+  ansible.builtin.import_tasks: s3.yml
+  when: ledger_download_method == "s3"
+
+- name: Download ledger via community snapshot
+  ansible.builtin.import_tasks: snapshot.yml
+  when: ledger_download_method == "snapshot"
+
+- name: Set ownership on data directory
+  ansible.builtin.file:
+    path: "{{ ledger_data_dir }}"
+    owner: "{{ ledger_data_owner }}"
+    group: "{{ ledger_data_group }}"
+    recurse: true

@@ -1,0 +1,24 @@
+galaxy_info:
+  role_name: ledger_download
+  author: shambupujar
+  description: Downloads Radix ledger data from AWS S3 or community snapshots
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - radix
+    - blockchain
+    - ledger
+    - backup
+    - snapshot
+
+dependencies: []

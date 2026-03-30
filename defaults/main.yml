@@ -1,0 +1,10 @@
+---
+ledger_download_method: snapshot
+ledger_data_dir: /data
+ledger_data_owner: radixdlt
+ledger_data_group: radixdlt
+ledger_s3_bucket: "s3://babylon-mainnet-ledger-backups/babylon_mainnet/babylon_mainnet_eu_west_3_fullnode0"
+ledger_s3_region: eu-west-3
+ledger_snapshot_url: "https://snapshots.radix.live/latest-snapshot-INDEX.sh"
+ledger_async_timeout: 21600
+ledger_async_poll: 60

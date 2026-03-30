@@ -1,0 +1,55 @@
+---
+- name: Install aria2 and zstd
+  ansible.builtin.apt:
+    name:
+      - aria2
+      - zstd
+    state: present
+    update_cache: true
+
+- name: Fetch latest snapshot script
+  ansible.builtin.uri:
+    url: "{{ ledger_snapshot_url }}"
+    return_content: true
+  register: snapshot_script
+
+- name: Extract metalink URL from snapshot script
+  ansible.builtin.set_fact:
+    snapshot_metalink_url: "{{ snapshot_script.content | regex_search('(ftp://\\S+\\.metalink)', '\\1') | first }}"
+
+- name: Download snapshot via aria2c
+  ansible.builtin.command:
+    cmd: >
+      aria2c
+      --continue=true
+      --dir={{ ledger_data_dir }}
+      -x3 -s16 -k4M
+      --piece-length=4M
+      --disk-cache=256M
+      --lowest-speed-limit=250k
+      {{ snapshot_metalink_url }}
+  async: "{{ ledger_async_timeout }}"
+  poll: "{{ ledger_async_poll }}"
+
+- name: Find downloaded snapshot archive
+  ansible.builtin.find:
+    paths: "{{ ledger_data_dir }}"
+    patterns: "RADIXDB-*.tar.zst"
+  register: snapshot_archive
+
+- name: Extract snapshot archive
+  ansible.builtin.command:
+    cmd: >
+      tar --use-compress-program=zstdmt
+      -xvf {{ snapshot_archive.files[0].path }}
+      --exclude=./address_book
+      -C {{ ledger_data_dir }}/
+  async: "{{ ledger_async_timeout }}"
+  poll: "{{ ledger_async_poll }}"
+  when: snapshot_archive.files | length > 0
+
+- name: Remove snapshot archive
+  ansible.builtin.file:
+    path: "{{ snapshot_archive.files[0].path }}"
+    state: absent
+  when: snapshot_archive.files | length > 0
